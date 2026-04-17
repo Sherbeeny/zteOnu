@@ -1,9 +1,11 @@
 package factory
 
 import (
+	"crypto/tls"
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -20,8 +22,14 @@ func New(user string, passwd string, ip string, port int) *Factory {
 		passwd: passwd,
 		ip:     ip,
 		port:   port,
-		cli: resty.New().SetHeader("User-Agent", "curl/8.8.0-DEV").
-			SetBaseURL(fmt.Sprintf("http://%s:%d", ip, port)),
+		cli: resty.New().
+			SetHeader("User-Agent", "curl/8.8.0-DEV").
+			SetBaseURL(fmt.Sprintf("http://%s:%d", ip, port)).
+			SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}).
+			SetRedirectPolicy(resty.FlexibleRedirectPolicy(10)).
+			SetTransport(&http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}),
 	}
 }
 
